@@ -7,10 +7,17 @@ import zio.ZLayer
 import zio.ZIO
 import services.httpclient.FHttpClient
 import services.httpclient.HttpClient
+import zio.Task
 
 object LoginForm {
 
   final val layer = zio.console.Console.live ++ FHttpClient.live
+
+  implicit val zioFlattenStrategy: FlattenStrategy[Observable, Task, EventStream] = new FlattenStrategy[Observable, Task, EventStream] {
+    def flatten[A](parent: Observable[Task[A]]): EventStream[A] = parent.flatMap(task => EventStream.fromFuture(
+      zio.Runtime.default.unsafeRunToFuture(task)
+    ))
+  }
 
   def apply(layer: ZLayer[Any, Nothing, zio.console.Console with HttpClient]) = {
 
@@ -33,33 +40,19 @@ object LoginForm {
 
     val submitBus = new EventBus[Unit]
     val $returnedLoginCall = submitBus.events
-      .withCurrentValueOf($loginData)
-      .map(_._2)
+      .sample($loginData)
       .map(ZLayer.succeed(_))
       .map(_ ++ layer)
       .flatMap(
-        layerWithLoginData =>
-          EventStream.fromFuture(
-            zio.Runtime.default.unsafeRunToFuture(
-              FormSubmit.submitData(routes.loginRoute).provideLayer(layerWithLoginData)
-            )
-          )
+        layerWithLoginData => FormSubmit.submitData(routes.loginRoute).provideLayer(layerWithLoginData)
       )
 
     val registerBus = new EventBus[Unit]
     val $returnedRegisterCall = registerBus.events
-      .withCurrentValueOf($loginData)
-      .map(_._2)
+      .sample($loginData)
       .map(ZLayer.succeed(_))
       .map(_ ++ layer)
-      .flatMap(
-        layerWithLoginData =>
-          EventStream.fromFuture(
-            zio.Runtime.default.unsafeRunToFuture(
-              FormSubmit.submitData(routes.registerRoute).provideLayer(layerWithLoginData)
-            )
-          )
-      )
+      .flatMap(layerWithLoginData => FormSubmit.submitData(routes.registerRoute).provideLayer(layerWithLoginData))
 
     div(
       form(

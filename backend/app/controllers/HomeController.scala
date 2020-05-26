@@ -50,8 +50,8 @@ class HomeController @Inject()(
             .handleLogin(jsonBody.toString)
             .provideLayer(layer)
             .map {
-              case None          => Ok("Logged in!") // no error, user is connected
-              case Some(message) => BadRequest(message) // there was an error, notifying frontend
+              case None          => Ok(Json.toJson("Logged in!")) // no error, user is connected
+              case Some(message) => BadRequest(Json.toJson(message)) // there was an error, notifying frontend
             }
         )
     }
@@ -66,8 +66,8 @@ class HomeController @Inject()(
             .handleRegister(jsonBody.toString)
             .provideLayer(layer)
             .map {
-              case None          => Ok("Registered!") // no error, user is notified
-              case Some(message) => BadRequest(message) // there was an error, notifying frontend
+              case None          => Ok(Json.toJson("Registered!")) // no error, user is notified
+              case Some(message) => BadRequest(Json.toJson(message)) // there was an error, notifying frontend
             }
         )
     }

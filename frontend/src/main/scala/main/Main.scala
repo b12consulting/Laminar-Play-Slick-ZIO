@@ -18,7 +18,7 @@ object Main extends zio.App {
   def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] =
     (for {
       _ <- putStrLn("Hello from Scala.js!")
-      _ <- ZIO.effectTotal(render(dom.document.getElementById("root").asInstanceOf[html.Div], LoginForm(layer)))
+      _ <- ZIO.effectTotal(render(dom.document.getElementById("root"), LoginForm(layer)))
     } yield 0).provideSomeLayer[zio.ZEnv](FHttpClient.live)
 
 }
