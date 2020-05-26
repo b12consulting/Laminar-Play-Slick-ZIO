@@ -1,0 +1,9 @@
+.bloop
+.metals
+.idea
+
+*/target
+target
+*/logs
+backend/public/*.map
+backend/public/frontend-scala.js
